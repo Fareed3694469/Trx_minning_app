@@ -379,7 +379,7 @@
         <div id="login-page" class="page active-page">
             <div class="app-header">
                 <h1 class="app-title">TRX Mining</h1>
-                <p class="app-subtitle">Start mining TRX with our powerful</p>
+                <p class="app-subtitle">Start mining TRX with our powerful minner</p>
             </div>
             
             <div class="form-group">
@@ -499,6 +499,12 @@
                 <button id="withdraw-btn" class="btn">Withdraw TRX</button>
                 <div id="withdraw-status" style="margin-top: 15px;"></div>
             </div>
+            
+            <div class="stat-card" style="margin-top: 20px;">
+                <div class="stat-title">Total Mining Sessions</div>
+                <div class="stat-value" id="total-sessions">0</div>
+                <div class="stat-desc">Completed mining hours</div>
+            </div>
         </div>
 
         <!-- Profile Page -->
@@ -592,6 +598,7 @@
                     const user = users.find(u => u.id === userId);
                     if (user) {
                         user.trxBalance += 0.06; // Full hour's worth
+                        user.totalSessions = (user.totalSessions || 0) + 1;
                         delete activeMiningSessions[userId];
                         saveUsers();
                     }
@@ -616,8 +623,10 @@
             } else {
                 // Session already ended
                 currentUser.trxBalance += 0.06;
+                currentUser.totalSessions = (currentUser.totalSessions || 0) + 1;
                 delete activeMiningSessions[currentUser.id];
                 saveUsers();
+                updateDashboard();
             }
         }
 
@@ -689,6 +698,7 @@
                 email,
                 password,
                 trxBalance: 0,
+                totalSessions: 0,
                 joinDate: new Date().toLocaleDateString(),
                 withdrawals: []
             };
@@ -769,8 +779,7 @@
         function showDashboard() {
             showPage('dashboard-page');
             document.getElementById('user-email').textContent = currentUser.email;
-            updateBalance();
-            updateProfileAvatar();
+            updateDashboard();
         }
 
         function updateBalance() {
@@ -780,6 +789,7 @@
         function updateDashboard() {
             updateBalance();
             updateProfileAvatar();
+            document.getElementById('total-sessions').textContent = currentUser.totalSessions || 0;
         }
 
         function updateProfile() {
@@ -796,11 +806,6 @@
         }
 
         function startMining() {
-            if (activeMiningSessions[currentUser.id]) {
-                alert('You already have an active mining session');
-                return;
-            }
-            
             // Create new mining session (1 hour)
             const endTime = Date.now() + (60 * 60 * 1000);
             activeMiningSessions[currentUser.id] = {
@@ -857,11 +862,12 @@
                 document.getElementById('mining-status').textContent = 'Mining session completed';
                 document.getElementById('mining-progress').textContent = '100% complete';
                 currentUser.trxBalance += 0.06; // 0.06 TRX for 1 hour
+                currentUser.totalSessions = (currentUser.totalSessions || 0) + 1;
                 minedAmount = 0;
                 delete activeMiningSessions[currentUser.id];
                 localStorage.setItem('trx_mining_sessions', JSON.stringify(activeMiningSessions));
                 saveUsers();
-                updateBalance();
+                updateDashboard();
             }
         }
 
@@ -877,7 +883,7 @@
                 delete activeMiningSessions[currentUser.id];
                 localStorage.setItem('trx_mining_sessions', JSON.stringify(activeMiningSessions));
                 saveUsers();
-                updateBalance();
+                updateDashboard();
             }
         }
 
@@ -991,4 +997,4 @@
         window.onload = initApp;
     </script>
 </body>
-</html>
+    </html>
